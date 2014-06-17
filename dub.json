@@ -1,9 +1,10 @@
 {
     "name": "mysql-d",
-    "description": "Mysql client binding.",
+    "description": "Mysql client C library binding.",
     "copyright": "Copyright © 2014, Pavel",
     "authors": ["Pavel Evstigneev"],
     "targetType": "library",
+    "license": "MIT",
     "libs": ["mysqlclient"],
     "versions": ["MySQL_51"],
 
