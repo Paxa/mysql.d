@@ -6,7 +6,6 @@
     "targetType": "library",
     "license": "MIT",
     "libs": ["mysqlclient"],
-    "versions": ["MySQL_51"],
 
     "buildTypes": {
         "release": {
