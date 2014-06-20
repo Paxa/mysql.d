@@ -6,7 +6,7 @@ import std.exception;
 import mysql.binding;
 import mysql.database;
 
-class MySqlResult : ResultSet {
+class MysqlResult : ResultSet {
     private int[string] mapping;
     public MYSQL_RES* result;
 

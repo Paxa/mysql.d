@@ -8,7 +8,7 @@ Documentation is not ready yet
 
 inport mysql.d;
 
-MySql connection = new MySql("localhost", "root", "root", "mysql_d_testing");
+Mysql connection = new Mysql("localhost", "root", "root", "mysql_d_testing");
 connection.query("CREATE TABLE mysql_d_table (
     id INT NOT NULL AUTO_INCREMENT,
     name VARCHAR(100),

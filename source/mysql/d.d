@@ -6,8 +6,8 @@ unittest {
     import std.stdio;
 
     // Connect to database
-    MySql connection1;
-    connection1 = new MySql("localhost", "root", "root", "mysql");
+    Mysql connection1;
+    connection1 = new Mysql("localhost", "root", "root", "mysql");
 
     // drop database if exists
     connection1.query("DROP DATABASE IF EXISTS mysql_d_testing");
@@ -18,7 +18,7 @@ unittest {
     //connection1.close();
 
     // connect to new created database
-    MySql connection = new MySql("localhost", "root", "root", "mysql_d_testing");
+    Mysql connection = new Mysql("localhost", "root", "root", "mysql_d_testing");
 
     // create table
     connection.query("CREATE TABLE mysql_d_table (

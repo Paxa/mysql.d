@@ -8,7 +8,7 @@ import std.stdio;
 import std.exception;
 import core.stdc.config;
 
-class MySql : Database {
+class Mysql : Database {
     this(string host, string user, string pass, string db) {
         mysql = enforceEx!(DatabaseException)(
             mysql_init(null),
@@ -46,7 +46,7 @@ class MySql : Database {
         return cast(int) mysql_insert_id(mysql);
     }
 
-    int insert(string table, MySqlResult result, string[string] columnsToModify, string[] columnsToSkip) {
+    int insert(string table, MysqlResult result, string[string] columnsToModify, string[] columnsToSkip) {
         assert(!result.empty);
         string sql = "INSERT INTO `" ~ table ~ "` ";
 
@@ -156,7 +156,7 @@ class MySql : Database {
         sql = fixupSqlForDataObjectUse(sql);
 
         auto magic = query(sql, t);
-        return ResultByDataObject!R(cast(MySqlResult) magic, this);
+        return ResultByDataObject!R(cast(MysqlResult) magic, this);
     }
 
 
@@ -164,7 +164,7 @@ class MySql : Database {
         sql = fixupSqlForDataObjectUse(sql, keyMapping);
 
         auto magic = query(sql, t);
-        return ResultByDataObject!R(cast(MySqlResult) magic, this);
+        return ResultByDataObject!R(cast(MysqlResult) magic, this);
     }
 
 
@@ -180,7 +180,7 @@ class MySql : Database {
             !mysql_query(mysql, toCstring(sql)),
         error() ~ " :::: " ~ sql);
 
-        return new MySqlResult(mysql_store_result(mysql), sql);
+        return new MysqlResult(mysql_store_result(mysql), sql);
     }
 
 /+
@@ -310,7 +310,7 @@ class MySql : Database {
 }
 
 struct ResultByDataObject(ObjType) if (is(ObjType : DataObject)) {
-    this(MySqlResult r, MySql mysql) {
+    this(MysqlResult r, Mysql mysql) {
         result = r;
         auto fields = r.fields();
         this.mysql = mysql;
@@ -338,8 +338,8 @@ struct ResultByDataObject(ObjType) if (is(ObjType : DataObject)) {
 
     @disable this(this) { }
 
-    MySqlResult result;
-    MySql mysql;
+    MysqlResult result;
+    Mysql mysql;
 }
 
 
@@ -349,7 +349,7 @@ Ret queryOneRow(Ret = Row, DB, string file = __FILE__, size_t line = __LINE__, T
     // && (is(Ret == Row) || is(Ret : DataObject)))
     )
 {
-    static if(is(Ret : DataObject) && is(DB == MySql)) {
+    static if(is(Ret : DataObject) && is(DB == Mysql)) {
         auto res = db.queryDataObject!Ret(sql, t);
         if(res.empty)
             throw new EmptyResultException("result was empty", file, line);
@@ -371,7 +371,7 @@ class EmptyResultException : Exception {
 
 /*
 void main() {
-    auto mysql = new MySql("localhost", "uname", "password", "test");
+    auto mysql = new Mysql("localhost", "uname", "password", "test");
     scope(exit) delete mysql;
 
     mysql.query("INSERT INTO users (id, password) VALUES (?, ?)", 10, "lol");
@@ -398,7 +398,7 @@ void main() {
 
 /*
 void main() {
-    auto db = new MySql("localhost", "uname", "password", "test");
+    auto db = new Mysql("localhost", "uname", "password", "test");
     foreach(item; db.queryDataObject("SELECT users.*, username
         FROM users, password_manager_accounts
         WHERE password_manager_accounts.user_id =  users.id LIMIT 5")) {
