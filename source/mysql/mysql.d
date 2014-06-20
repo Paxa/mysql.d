@@ -1,167 +1,12 @@
-/// NOTE: If you're using MySQL client library v5.1 or greater,
-///       you must pass this to dmd: -version=MySQL_51
-/// This is important - otherwise you will see bizarre segfaults!
 module mysql.mysql;
-import std.stdio;
 
-version(MySQL_51) {
-    // we good
-} else version(Less_Than_MySQL_51) {
-    // we good
-} else
-    pragma(msg, "NOTE: If you are using MySQL 5.1 or newer, specify -version=MySQL_51 to dmd to avoid segfaults. If you are on an older version, you can shut this message up with -version=Less_Than_MySQL_51");
-
-version(Windows) {
-    pragma(lib, "libmysql");
-}
-else {
-    pragma(lib, "mysqlclient");
-}
-
+import mysql.binding;
 public import mysql.database;
+public import mysql.mysql_result;
 
 import std.stdio;
 import std.exception;
-import std.string;
-import std.conv;
-import std.typecons;
 import core.stdc.config;
-
-auto cstr2dstr(inout(char)* cstr, uint str_size)
-{
-    import core.stdc.string: strlen;
-    return cstr ? cstr[0 .. strlen(cstr)] : "";
-}
-
-
-class MySqlResult : ResultSet {
-    private int[string] mapping;
-    public MYSQL_RES* result;
-
-    private int itemsTotal;
-    private int itemsUsed;
-
-    string sql;
-
-    this(MYSQL_RES* r, string sql) {
-        result = r;
-        itemsTotal = length();
-        itemsUsed = 0;
-
-        this.sql = sql;
-
-        // prime it
-        if(itemsTotal)
-            fetchNext();
-    }
-
-    ~this() {
-        if(result !is null)
-            mysql_free_result(result);
-    }
-
-
-    MYSQL_FIELD[] fields() {
-        int numFields = mysql_num_fields(result);
-        auto fields = mysql_fetch_fields(result);
-        MYSQL_FIELD[] ret;
-        for(int i = 0; i < numFields; i++) {
-            ret ~= fields[i];
-        }
-
-        return ret;
-    }
-
-
-    override int length() {
-        if(result is null)
-            return 0;
-        return cast(int) mysql_num_rows(result);
-    }
-
-    override bool empty() {
-        return itemsUsed == itemsTotal;
-    }
-
-    override Row front() {
-        return row;
-    }
-
-    override void popFront() {
-        itemsUsed++;
-        if(itemsUsed < itemsTotal) {
-            fetchNext();
-        }
-    }
-
-    override int getFieldIndex(string field) {
-        if(mapping is null)
-            makeFieldMapping();
-        debug {
-            if(field !in mapping)
-                throw new Exception(field ~ " not in result");
-        }
-        return mapping[field];
-    }
-
-    private void makeFieldMapping() {
-        int numFields = mysql_num_fields(result);
-        auto fields = mysql_fetch_fields(result);
-
-        if(fields is null)
-            return;
-
-        for(int i = 0; i < numFields; i++) {
-            if(fields[i].name !is null)
-                mapping[fromCstring(fields[i].name, fields[i].name_length)] = i;
-        }
-    }
-
-    private void fetchNext() {
-        assert(result);
-        auto my_row = mysql_fetch_row(result);
-        if(my_row is null)
-            throw new Exception("there is no next row");
-        uint numFields = mysql_num_fields(result);
-        uint* lengths = mysql_fetch_lengths(result);
-        string[] row;
-        // potential FIXME: not really binary safe
-
-        columnIsNull.length = numFields;
-        for(uint numField = 0; numField < numFields; numField++) {
-          //writefln("numField %d", numField);
-            if (my_row[numField] is null) {
-                row ~= null;
-                columnIsNull[numField] = true;
-            } else {
-                row ~= cast(string) cstr2dstr(my_row[numField], lengths[numField]);
-                columnIsNull[numField] = false;
-            }
-        }
-
-        this.row.row = row;
-        this.row.resultSet = this;
-    }
-
-
-    override string[] fieldNames() {
-        int numFields = mysql_num_fields(result);
-        auto fields = mysql_fetch_fields(result);
-
-        string[] names;
-        for(int i = 0; i < numFields; i++) {
-            names ~= fromCstring(fields[i].name, fields[i].name_length);
-        }
-
-        return names;
-    }
-
-
-
-    bool[] columnIsNull;
-    Row row;
-}
-
 
 class MySql : Database {
     this(string host, string user, string pass, string db) {
@@ -175,9 +20,7 @@ class MySql : Database {
         dbname = db;
 
         // we want UTF8 for everything
-
         query("SET NAMES 'utf8'");
-        //query("SET CHARACTER SET utf8");
     }
 
     string dbname;
@@ -198,11 +41,10 @@ class MySql : Database {
         close();
     }
 
+    // MYSQL API call
     int lastInsertId() {
         return cast(int) mysql_insert_id(mysql);
     }
-
-
 
     int insert(string table, MySqlResult result, string[string] columnsToModify, string[] columnsToSkip) {
         assert(!result.empty);
@@ -240,7 +82,7 @@ class MySql : Database {
                 if(cnames[i] in columnsToModify)
                     v = columnsToModify[cnames[i]];
 
-                vals ~= "'" ~ escape(v) ~ "'"; 
+                vals ~= "'" ~ escape(v) ~ "'";
 
             }
         }
@@ -257,6 +99,7 @@ class MySql : Database {
         return lastInsertId;
     }
 
+    // MYSQL API call
     string escape(string str) {
         ubyte[] buffer = new ubyte[str.length * 2 + 1];
         buffer.length = mysql_real_escape_string(mysql, buffer.ptr, cast(cstring) str.ptr, cast(uint) str.length);
@@ -308,7 +151,6 @@ class MySql : Database {
     }
 
 
-
     ResultByDataObject!R queryDataObject(R = DataObject, T...)(string sql, T t) {
         // modify sql for the best data object grabbing
         sql = fixupSqlForDataObjectUse(sql);
@@ -326,10 +168,7 @@ class MySql : Database {
     }
 
 
-
-
-
-
+    // MYSQL API call
     int affectedRows() {
         return cast(int) mysql_affected_rows(mysql);
     }
@@ -343,91 +182,6 @@ class MySql : Database {
 
         return new MySqlResult(mysql_store_result(mysql), sql);
     }
-/+
-    Result queryOld(T...)(string sql, T t) {
-        sql = escaped(sql, t);
-
-        if(sql.length == 0)
-            throw new DatabaseException("empty query");
-        /*
-        static int queryCount = 0;
-        queryCount++;
-        if(sql.indexOf("INSERT") != -1)
-            stderr.writefln("%d: %s", queryCount, sql.replace("\n", " ").replace("\t", ""));
-        */
-
-        version(dryRun) {
-            pragma(msg, "This is a dry run compile, no queries will be run");
-            writeln(sql);
-            return Result(null, null);
-        }
-
-        enforceEx!(DatabaseException)(
-            !mysql_query(mysql, toCstring(sql)),
-        error() ~ " :::: " ~ sql);
-
-        return Result(mysql_store_result(mysql), sql);
-    }
-+/
-/+
-    struct ResultByAssoc {
-        this(Result* r) {
-            result = r;
-            fields = r.fieldNames();
-        }
-
-        ulong length() { return result.length; }
-        bool empty() { return result.empty; }
-        void popFront() { result.popFront(); }
-        string[string] front() {
-            auto r = result.front;
-            string[string] ret;
-            foreach(i, a; r) {
-                ret[fields[i]] = a;
-            }
-
-            return ret;
-        }
-
-        @disable this(this) { }
-
-        string[] fields;
-        Result* result;
-    }
-
-
-    struct ResultByStruct(T) {
-        this(Result* r) {
-            result = r;
-            fields = r.fieldNames();
-        }
-
-        ulong length() { return result.length; }
-        bool empty() { return result.empty; }
-        void popFront() { result.popFront(); }
-        T front() {
-            auto r = result.front;
-            string[string] ret;
-            foreach(i, a; r) {
-                ret[fields[i]] = a;
-            }
-
-            T s;
-            // FIXME: should use tupleOf
-            foreach(member; s.tupleof) {
-                if(member.stringof in ret)
-                    member = to!(typeof(member))(ret[member]);
-            }
-
-            return s;
-        }
-
-        @disable this(this) { }
-
-        string[] fields;
-        Result* result;
-    }
-+/
 
 /+
 
@@ -544,7 +298,7 @@ class MySql : Database {
 
         ulong itemsTotal;
         ulong itemsUsed;
-        
+
         alias string[] Row;
 
         Row row;
@@ -588,134 +342,6 @@ struct ResultByDataObject(ObjType) if (is(ObjType : DataObject)) {
     MySql mysql;
 }
 
-extern(System) {
-    struct MYSQL;
-    struct MYSQL_RES {
-    ulong  row_count;
-    MYSQL_FIELD    *fields;
-    MYSQL_DATA    *data;
-    MYSQL_ROWS    *data_cursor;
-    ulong *lengths;        /* column lengths of current row */
-    MYSQL        *handle;        /* for unbuffered reads */
-    //const struct st_mysql_methods *methods;
-    MYSQL_ROW    row;            /* If unbuffered read */
-    MYSQL_ROW    current_row;        /* buffer to current row */
-    ///MEM_ROOT    field_alloc;
-    uint    field_count, current_field;
-    char    eof;            /* Used by mysql_fetch_row */
-    /* mysql_stmt_close() had to cancel this result */
-    char       unbuffered_fetch_cancelled;  
-    void *extension;
-    }
-
-  struct MYSQL_ROWS {
-    //struct st_mysql_rows *next;        /* list of rows */
-    MYSQL_ROW data;
-    ulong length;
-  }
-
-  struct MYSQL_DATA {
-    MYSQL_ROWS *data;
-    //struct embedded_query_result *embedded_info;
-    //MEM_ROOT alloc;
-    ulong rows;
-    uint fields;
-    /* extra info for embedded library */
-    void *extension;
-  }
-    /* typedef */ alias const(ubyte)* cstring;
-
-    struct MYSQL_FIELD {
-          cstring name;                 /* Name of column */
-          cstring org_name;             /* Original column name, if an alias */ 
-          cstring table;                /* Table of column if column was a field */
-          cstring org_table;            /* Org table name, if table was an alias */
-          cstring db;                   /* Database for table */
-          cstring catalog;          /* Catalog for table */
-          cstring def;                  /* Default value (set by mysql_list_fields) */
-          ulong length;       /* Width of column (create length) */
-          ulong max_length;   /* Max width for selected set */
-          uint name_length;
-          uint org_name_length;
-          uint table_length;
-          uint org_table_length;
-          uint db_length;
-          uint catalog_length;
-          uint def_length;
-          uint flags;         /* Div flags */
-          uint decimals;      /* Number of decimals in field */
-          uint charsetnr;     /* Character set */
-          uint type; /* Type of field. See mysql_com.h for types */
-          // type is actually an enum btw
-          
-        version(MySQL_51) {
-            void* extension;
-        }
-    }
-
-    /* typedef */ alias char** MYSQL_ROW;
-
-    cstring mysql_get_client_info();
-    MYSQL* mysql_init(MYSQL*);
-    uint mysql_errno(MYSQL*);
-    cstring mysql_error(MYSQL*);
-
-    MYSQL* mysql_real_connect(MYSQL*, cstring, cstring, cstring, cstring, uint, cstring, c_ulong);
-
-    int mysql_query(MYSQL*, cstring);
-
-    void mysql_close(MYSQL*);
-
-    ulong mysql_num_rows(MYSQL_RES*);
-    uint mysql_num_fields(MYSQL_RES*);
-    bool mysql_eof(MYSQL_RES*);
-
-    ulong mysql_affected_rows(MYSQL*);
-    ulong mysql_insert_id(MYSQL*);
-
-    MYSQL_RES* mysql_store_result(MYSQL*);
-    MYSQL_RES* mysql_use_result(MYSQL*);
-
-    MYSQL_ROW mysql_fetch_row(MYSQL_RES *);
-    uint* mysql_fetch_lengths(MYSQL_RES*);
-    MYSQL_FIELD* mysql_fetch_field(MYSQL_RES*);
-    MYSQL_FIELD* mysql_fetch_fields(MYSQL_RES*);
-    MYSQL_FIELD mysql_fetch_field_direct(MYSQL_RES*, uint);
-    
-
-    uint mysql_real_escape_string(MYSQL*, ubyte* to, cstring from, uint length);
-
-    void mysql_free_result(MYSQL_RES*);
-
-}
-
-import std.string;
-cstring toCstring(string c) {
-    return cast(cstring) toStringz(c);
-}
-
-import std.array;
-string fromCstring(cstring c, int len = -1) {
-    string ret;
-    if(c is null)
-        return null;
-    if(len == 0)
-        return "";
-    if(len == -1) {
-        auto iterator = c;
-        while(*iterator)
-            iterator++;
-
-        // note they are both byte pointers, so this is sane
-        len = cast(int) iterator - cast(int) c;
-        assert(len >= 0);
-    }
-
-    ret = cast(string) (c[0 .. len].idup);
-
-    return ret;
-}
-
 
 // FIXME: this should work generically with all database types and them moved to database.d
 Ret queryOneRow(Ret = Row, DB, string file = __FILE__, size_t line = __LINE__, T...)(DB db, string sql, T t) if(
@@ -755,34 +381,6 @@ void main() {
     }
 }
 */
-
-/*
-struct ResultByStruct(T) {
-    this(MySql.Result* r) {
-        result = r;
-        fields = r.fieldNames();
-    }
-
-    ulong length() { return result.length; }
-    bool empty() { return result.empty; }
-    void popFront() { result.popFront(); }
-    T front() {
-        auto r = result.front;
-        T ret;
-        foreach(i, a; r) {
-            ret[fields[i]] = a;
-        }
-
-        return ret;
-    }
-
-    @disable this(this) { }
-
-    string[] fields;
-    MySql.Result* result;
-}
-*/
-
 
 /+
     mysql.linq.tablename.field[key] // select field from tablename where id = key
