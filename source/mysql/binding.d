@@ -107,11 +107,14 @@ extern(System) {
     alias char** MYSQL_ROW;
 
     cstring mysql_get_client_info();
+    ulong mysql_get_client_version();
+
     MYSQL* mysql_init(MYSQL*);
     uint mysql_errno(MYSQL*);
     cstring mysql_error(MYSQL*);
 
     MYSQL* mysql_real_connect(MYSQL*, cstring, cstring, cstring, cstring, uint, cstring, c_ulong);
+    int mysql_select_db(MYSQL*, cstring);
 
     int mysql_query(MYSQL*, cstring);
 
@@ -132,7 +135,6 @@ extern(System) {
     MYSQL_FIELD* mysql_fetch_field(MYSQL_RES*);
     MYSQL_FIELD* mysql_fetch_fields(MYSQL_RES*);
     MYSQL_FIELD mysql_fetch_field_direct(MYSQL_RES*, uint);
-
 
     uint mysql_real_escape_string(MYSQL*, ubyte* to, cstring from, uint length);
 

@@ -5,20 +5,34 @@ public import mysql.mysql;
 unittest {
     import std.stdio;
 
+    // check version of mysqlclient
+    if (Mysql.clientVersion < 50100) {
+      writeln("Your mysqlclient version is ", Mysql.clientVersionString, ". Better use version >= 5.1");
+    }
+    assert(Mysql.clientVersion > 50100);
+
     // Connect to database
-    Mysql connection1;
-    connection1 = new Mysql("localhost", "root", "root", "mysql");
+    Mysql connection;
+    connection = new Mysql("localhost", "root", "root", "mysql");
 
     // drop database if exists
-    connection1.query("DROP DATABASE IF EXISTS mysql_d_testing");
+    connection.query("DROP DATABASE IF EXISTS mysql_d_testing");
     // create database
-    connection1.query("CREATE DATABASE mysql_d_testing");
+    connection.query("CREATE DATABASE mysql_d_testing");
+
+    // check current database
+    auto q_res = connection.query("SELECT DATABASE() as dbname;");
+    assert(q_res.front["dbname"], "mysql");
+
+    // change database
+    connection.selectDb("mysql_d_testing");
+
+    // check, it should be changed
+    auto q_res2 = connection.query("SELECT DATABASE() as dbname;");
+    assert(q_res2.front["dbname"], "mysql_d_testing");
 
     // TODO: fix connection.close()
-    //connection1.close();
-
-    // connect to new created database
-    Mysql connection = new Mysql("localhost", "root", "root", "mysql_d_testing");
+    //connection.close();
 
     // create table
     connection.query("CREATE TABLE mysql_d_table (
@@ -53,9 +67,13 @@ unittest {
     assert(res.front["name"] == "Paul");
     assert(res.front["date"] == "1989-05-06");
 
+    // this should raise an error
+    bool catched = false;
     try {
         res.getFieldIndex("column_which_not_exists");
     } catch (Exception e) {
         assert(e.msg == "column_which_not_exists not in result");
+        catched = true;
     }
+    assert(catched == true);
 }

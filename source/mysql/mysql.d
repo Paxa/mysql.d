@@ -25,6 +25,20 @@ class Mysql : Database {
 
     string dbname;
 
+    int selectDb(string newDbName) {
+      auto res = mysql_select_db(mysql, toCstring(newDbName));
+      dbname = newDbName;
+      return res;
+    }
+
+    static ulong clientVersion() {
+      return mysql_get_client_version();
+    }
+
+    static string clientVersionString() {
+      return fromCstring(mysql_get_client_info());
+    }
+
     override void startTransaction() {
         query("START TRANSACTION");
     }
