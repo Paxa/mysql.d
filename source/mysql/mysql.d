@@ -85,8 +85,14 @@ class Mysql {
         return new MysqlResult(mysql_store_result(mysql), sql);
     }
 
+    // MYSQL API call
     int ping() {
         return mysql_ping(mysql);
+    }
+
+    // MYSQL API call
+    string stat() {
+        return fromCstring(mysql_stat(mysql));
     }
 
     // ====== helpers ======

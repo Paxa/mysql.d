@@ -120,6 +120,7 @@ extern(System) {
 
     void mysql_close(MYSQL*);
     int mysql_ping(MYSQL *mysql);
+    cstring mysql_stat(MYSQL *mysql);
 
     ulong mysql_num_rows(MYSQL_RES*);
     uint mysql_num_fields(MYSQL_RES*);

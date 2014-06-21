@@ -87,6 +87,7 @@ unittest {
     }
     assert(catched == true);
 
+    writeln(mysql.stat);
     // TODO: fix mysql.close()
     // mysql.close();
 }
