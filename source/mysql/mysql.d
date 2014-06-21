@@ -3,12 +3,17 @@ module mysql.mysql;
 import mysql.binding;
 public import mysql.database;
 public import mysql.mysql_result;
+public import mysql.data_object;
+public import mysql.query_interface;
 
 import std.stdio;
 import std.exception;
 import core.stdc.config;
 
-class Mysql : Database {
+class Mysql {
+    string dbname;
+    private MYSQL* mysql;
+
     this(string host, string user, string pass, string db) {
         mysql = enforceEx!(DatabaseException)(
             mysql_init(null),
@@ -23,23 +28,21 @@ class Mysql : Database {
         query("SET NAMES 'utf8'");
     }
 
-    string dbname;
-
     int selectDb(string newDbName) {
-      auto res = mysql_select_db(mysql, toCstring(newDbName));
-      dbname = newDbName;
-      return res;
+        auto res = mysql_select_db(mysql, toCstring(newDbName));
+        dbname = newDbName;
+        return res;
     }
 
     static ulong clientVersion() {
-      return mysql_get_client_version();
+        return mysql_get_client_version();
     }
 
     static string clientVersionString() {
-      return fromCstring(mysql_get_client_info());
+        return fromCstring(mysql_get_client_info());
     }
 
-    override void startTransaction() {
+    void startTransaction() {
         query("START TRANSACTION");
     }
 
@@ -60,57 +63,9 @@ class Mysql : Database {
         return cast(int) mysql_insert_id(mysql);
     }
 
-    int insert(string table, MysqlResult result, string[string] columnsToModify, string[] columnsToSkip) {
-        assert(!result.empty);
-        string sql = "INSERT INTO `" ~ table ~ "` ";
-
-        string cols = "(";
-        string vals = "(";
-        bool outputted = false;
-
-        string[string] columns;
-        auto cnames = result.fieldNames;
-        foreach(i, col; result.front.toStringArray) {
-            bool skipMe = false;
-            foreach(skip; columnsToSkip) {
-                if(cnames[i] == skip) {
-                    skipMe = true;
-                    break;
-                }
-            }
-            if(skipMe)
-                continue;
-
-            if(outputted) {
-                cols ~= ",";
-                vals ~= ",";
-            } else
-                outputted = true;
-
-            cols ~= cnames[i];
-
-            if(result.columnIsNull[i] && cnames[i] !in columnsToModify)
-                vals ~= "NULL";
-            else {
-                string v = col;
-                if(cnames[i] in columnsToModify)
-                    v = columnsToModify[cnames[i]];
-
-                vals ~= "'" ~ escape(v) ~ "'";
-
-            }
-        }
-
-        cols ~= ")";
-        vals ~= ")";
-
-        sql ~= cols ~ " VALUES " ~ vals;
-
-        query(sql);
-
-        result.popFront;
-
-        return lastInsertId;
+    // MYSQL API call
+    int affectedRows() {
+        return cast(int) mysql_affected_rows(mysql);
     }
 
     // MYSQL API call
@@ -121,49 +76,40 @@ class Mysql : Database {
         return cast(string) buffer;
     }
 
-    string escaped(T...)(string sql, T t) {
-        static if(t.length > 0) {
-            string fixedup;
-            int pos = 0;
+    // MYSQL API call
+    ResultSet queryImpl(string sql) {
+        enforceEx!(DatabaseException)(
+            !mysql_query(mysql, toCstring(sql)),
+        error() ~ " :::: " ~ sql);
 
-
-            void escAndAdd(string str, int q) {
-                ubyte[] buffer = new ubyte[str.length * 2 + 1];
-                buffer.length = mysql_real_escape_string(mysql, buffer.ptr, cast(cstring) str.ptr, str.length);
-
-                fixedup ~= sql[pos..q] ~ '\'' ~ cast(string) buffer ~ '\'';
-
-            }
-
-            foreach(a; t) {
-                int q = sql[pos..$].indexOf("?");
-                if(q == -1)
-                    break;
-                q += pos;
-
-                static if(__traits(compiles, t is null)) {
-                    if(t is null)
-                        fixedup  ~= sql[pos..q] ~ "NULL";
-                    else
-                        escAndAdd(to!string(*a), q);
-                } else {
-                    string str = to!string(a);
-                    escAndAdd(str, q);
-                }
-
-                pos = q+1;
-            }
-
-            fixedup ~= sql[pos..$];
-
-            sql = fixedup;
-
-            //writefln("\n\nExecuting sql: %s", sql);
-        }
-
-        return sql;
+        return new MysqlResult(mysql_store_result(mysql), sql);
     }
 
+    int ping() {
+        return mysql_ping(mysql);
+    }
+
+    // ====== helpers ======
+
+    // Smart interface thing.
+    // accept multiple attributes and make replacement of '?' in sql
+    // like this:
+    // auto row = mysql.query("select * from table where id = ?", 10);
+    ResultSet query(T...)(string sql, T t) {
+        return queryImpl(QueryInterface.makeQuery(this, sql, t));
+    }
+
+    // simply make mysq.query().front
+    // and if no rows then raise an exception
+    Row queryOneRow(string file = __FILE__, size_t line = __LINE__, T...)(string sql, T t) {
+        auto res = query(sql, t);
+        if (res.empty) {
+            throw new Exception("no row in result", file, line);
+        }
+        auto row = res.front;
+
+        return row;
+    }
 
     ResultByDataObject!R queryDataObject(R = DataObject, T...)(string sql, T t) {
         // modify sql for the best data object grabbing
@@ -180,150 +126,12 @@ class Mysql : Database {
         auto magic = query(sql, t);
         return ResultByDataObject!R(cast(MysqlResult) magic, this);
     }
-
-
-    // MYSQL API call
-    int affectedRows() {
-        return cast(int) mysql_affected_rows(mysql);
-    }
-
-    override ResultSet queryImpl(string sql, Variant[] args...) {
-        sql = escapedVariants(this, sql, args);
-
-        enforceEx!(DatabaseException)(
-            !mysql_query(mysql, toCstring(sql)),
-        error() ~ " :::: " ~ sql);
-
-        return new MysqlResult(mysql_store_result(mysql), sql);
-    }
-
-/+
-
-
-    struct Result {
-        private Result* heaped() {
-            auto r = new Result(result, sql, false);
-
-            r.tupleof = this.tupleof;
-
-            this.itemsTotal = 0;
-            this.result = null;
-
-            return r;
-        }
-
-        this(MYSQL_RES* r, string sql, bool prime = true) {
-            result = r;
-            itemsTotal = length;
-            itemsUsed = 0;
-            this.sql = sql;
-            // prime it here
-            if(prime && itemsTotal)
-                fetchNext();
-        }
-
-        string sql;
-
-        ~this() {
-            if(result !is null)
-            mysql_free_result(result);
-        }
-
-        /+
-        string[string][] fetchAssoc() {
-
-        }
-        +/
-
-        ResultByAssoc byAssoc() {
-            return ResultByAssoc(&this);
-        }
-
-        ResultByStruct!(T) byStruct(T)() {
-            return ResultByStruct!(T)(&this);
-        }
-
-        string[] fieldNames() {
-            int numFields = mysql_num_fields(result);
-            auto fields = mysql_fetch_fields(result);
-
-            string[] names;
-            for(int i = 0; i < numFields; i++) {
-                names ~= fromCstring(fields[i].name);
-            }
-
-            return names;
-        }
-
-        MYSQL_FIELD[] fields() {
-            int numFields = mysql_num_fields(result);
-            auto fields = mysql_fetch_fields(result);
-
-            MYSQL_FIELD[] ret;
-            for(int i = 0; i < numFields; i++) {
-                ret ~= fields[i];
-            }
-
-            return ret;
-        }
-
-        ulong length() {
-            if(result is null)
-                return 0;
-            return mysql_num_rows(result);
-        }
-
-        bool empty() {
-            return itemsUsed == itemsTotal;
-        }
-
-        Row front() {
-            return row;
-        }
-
-        void popFront() {
-            itemsUsed++;
-            if(itemsUsed < itemsTotal) {
-                fetchNext();
-            }
-        }
-
-        void fetchNext() {
-            auto r = mysql_fetch_row(result);
-            uint numFields = mysql_num_fields(result);
-            uint* lengths = mysql_fetch_lengths(result);
-            row.length = 0;
-            // potential FIXME: not really binary safe
-
-            columnIsNull.length = numFields;
-            for(int a = 0; a < numFields; a++) {
-                if(*(r+a) is null) {
-                    row ~= null;
-                    columnIsNull[a] = true;
-                } else {
-                    row ~= fromCstring(*(r+a), *(lengths + a));
-                    columnIsNull[a] = false;
-                }
-            }
-        }
-
-        @disable this(this) {}
-        private MYSQL_RES* result;
-
-        ulong itemsTotal;
-        ulong itemsUsed;
-
-        alias string[] Row;
-
-        Row row;
-        bool[] columnIsNull; // FIXME: should be part of the row
-    }
-+/
-  private:
-    MYSQL* mysql;
 }
 
 struct ResultByDataObject(ObjType) if (is(ObjType : DataObject)) {
+    MysqlResult result;
+    Mysql mysql;
+
     this(MysqlResult r, Mysql mysql) {
         result = r;
         auto fields = r.fields();
@@ -351,30 +159,8 @@ struct ResultByDataObject(ObjType) if (is(ObjType : DataObject)) {
     // it'd just fill in the ID's at random and allow you to do the rest
 
     @disable this(this) { }
-
-    MysqlResult result;
-    Mysql mysql;
 }
 
-
-// FIXME: this should work generically with all database types and them moved to database.d
-Ret queryOneRow(Ret = Row, DB, string file = __FILE__, size_t line = __LINE__, T...)(DB db, string sql, T t) if(
-    (is(DB : Database))
-    // && (is(Ret == Row) || is(Ret : DataObject)))
-    )
-{
-    static if(is(Ret : DataObject) && is(DB == Mysql)) {
-        auto res = db.queryDataObject!Ret(sql, t);
-        if(res.empty)
-            throw new EmptyResultException("result was empty", file, line);
-        return res.front;
-    } else static if(is(Ret == Row)) {
-        auto res = db.query(sql, t);
-        if(res.empty)
-            throw new EmptyResultException("result was empty", file, line);
-        return res.front;
-    } else static assert(0, "Unsupported single row query return value, " ~ Ret.stringof);
-}
 
 class EmptyResultException : Exception {
     this(string message, string file = __FILE__, size_t line = __LINE__) {

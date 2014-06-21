@@ -13,6 +13,9 @@ class MysqlResult : ResultSet {
     private int itemsTotal;
     private int itemsUsed;
 
+    bool[] columnIsNull;
+    Row row;
+
     string sql;
 
     this(MYSQL_RES* r, string sql) {
@@ -127,7 +130,4 @@ class MysqlResult : ResultSet {
 
         return names;
     }
-
-    bool[] columnIsNull;
-    Row row;
 }
