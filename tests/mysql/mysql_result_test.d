@@ -1,10 +1,10 @@
 module mysql.mysql_result_test;
 
 import std.stdio;
-import mysql.mysql;
-
-import mysql.test_helper;
 import dunit.toolkit;
+
+import mysql.mysql;
+import mysql.test_helper;
 
 // MAKE AN SQL QUERY
 unittest {
@@ -36,21 +36,9 @@ unittest {
 
     assert(res.fieldNames() == ["id", "name", "date"]);
 
-    assert(res.front["id"] == "1");
-    assert(res.front["name"] == "Paul");
-    assert(res.front["date"] == "1989-05-06");
-
     // this should raise an error
-    bool catched = false;
-    try {
-        res.getFieldIndex("column_which_not_exists");
-    } catch (Exception e) {
-        assert(e.msg == "column_which_not_exists not in result");
-        catched = true;
-    }
-    assert(catched == true);
+    res.getFieldIndex("column_which_not_exists").assertThrow!(Exception)("column_which_not_exists not in result");
 
-    writeln(mysql.stat);
     // TODO: fix mysql.close()
     // mysql.close();
 }

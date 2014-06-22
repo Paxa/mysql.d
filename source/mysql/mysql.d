@@ -1,24 +1,29 @@
 module mysql.mysql;
 
 import mysql.binding;
-public import mysql.database;
+
 public import mysql.mysql_result;
-public import mysql.data_object;
-public import mysql.query_interface;
+public import mysql.mysql_row;
+import mysql.query_interface;
 
 import std.stdio;
 import std.exception;
-import core.stdc.config;
+
+class MysqlDatabaseException : Exception {
+    this(string msg, string file = __FILE__, size_t line = __LINE__) {
+        super(msg, file, line);
+    }
+}
 
 class Mysql {
     string dbname;
     private MYSQL* mysql;
 
     this(string host, string user, string pass, string db) {
-        mysql = enforceEx!(DatabaseException)(
+        mysql = enforceEx!(MysqlDatabaseException)(
             mysql_init(null),
             "Couldn't init mysql");
-        enforceEx!(DatabaseException)(
+        enforceEx!(MysqlDatabaseException)(
             mysql_real_connect(mysql, toCstring(host), toCstring(user), toCstring(pass), toCstring(db), 0, null, 0),
             error());
 
@@ -77,8 +82,8 @@ class Mysql {
     }
 
     // MYSQL API call
-    ResultSet queryImpl(string sql) {
-        enforceEx!(DatabaseException)(
+    MysqlResult queryImpl(string sql) {
+        enforceEx!(MysqlDatabaseException)(
             !mysql_query(mysql, toCstring(sql)),
         error() ~ " :::: " ~ sql);
 
@@ -101,13 +106,13 @@ class Mysql {
     // accept multiple attributes and make replacement of '?' in sql
     // like this:
     // auto row = mysql.query("select * from table where id = ?", 10);
-    ResultSet query(T...)(string sql, T t) {
+    MysqlResult query(T...)(string sql, T t) {
         return queryImpl(QueryInterface.makeQuery(this, sql, t));
     }
 
     // simply make mysq.query().front
     // and if no rows then raise an exception
-    Row queryOneRow(string file = __FILE__, size_t line = __LINE__, T...)(string sql, T t) {
+    MysqlRow queryOneRow(string file = __FILE__, size_t line = __LINE__, T...)(string sql, T t) {
         auto res = query(sql, t);
         if (res.empty) {
             throw new Exception("no row in result", file, line);
@@ -117,6 +122,7 @@ class Mysql {
         return row;
     }
 
+/*
     ResultByDataObject!R queryDataObject(R = DataObject, T...)(string sql, T t) {
         // modify sql for the best data object grabbing
         sql = fixupSqlForDataObjectUse(sql);
@@ -132,8 +138,10 @@ class Mysql {
         auto magic = query(sql, t);
         return ResultByDataObject!R(cast(MysqlResult) magic, this);
     }
+*/
 }
 
+/*
 struct ResultByDataObject(ObjType) if (is(ObjType : DataObject)) {
     MysqlResult result;
     Mysql mysql;
@@ -166,6 +174,7 @@ struct ResultByDataObject(ObjType) if (is(ObjType : DataObject)) {
 
     @disable this(this) { }
 }
+*/
 
 
 class EmptyResultException : Exception {

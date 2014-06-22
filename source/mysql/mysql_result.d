@@ -4,9 +4,9 @@ import std.stdio;
 import std.exception;
 
 import mysql.binding;
-import mysql.database;
+import mysql.mysql_row;
 
-class MysqlResult : ResultSet {
+class MysqlResult {
     private int[string] mapping;
     public MYSQL_RES* result;
 
@@ -14,7 +14,7 @@ class MysqlResult : ResultSet {
     private int itemsUsed;
 
     bool[] columnIsNull;
-    Row row;
+    MysqlRow row;
 
     string sql;
 
@@ -48,28 +48,28 @@ class MysqlResult : ResultSet {
     }
 
 
-    override int length() {
+    int length() {
         if(result is null)
             return 0;
         return cast(int) mysql_num_rows(result);
     }
 
-    override bool empty() {
+    bool empty() {
         return itemsUsed == itemsTotal;
     }
 
-    override Row front() {
+    MysqlRow front() {
         return row;
     }
 
-    override void popFront() {
+    void popFront() {
         itemsUsed++;
         if(itemsUsed < itemsTotal) {
             fetchNext();
         }
     }
 
-    override int getFieldIndex(string field) {
+    int getFieldIndex(string field) {
         if(mapping is null)
             makeFieldMapping();
         debug {
@@ -77,6 +77,18 @@ class MysqlResult : ResultSet {
                 throw new Exception(field ~ " not in result");
         }
         return mapping[field];
+    }
+
+    string[] fieldNames() {
+        int numFields = mysql_num_fields(result);
+        auto fields = mysql_fetch_fields(result);
+
+        string[] names;
+        for(int i = 0; i < numFields; i++) {
+            names ~= fromCstring(fields[i].name, fields[i].name_length);
+        }
+
+        return names;
     }
 
     private void makeFieldMapping() {
@@ -116,18 +128,5 @@ class MysqlResult : ResultSet {
 
         this.row.row = row;
         this.row.resultSet = this;
-    }
-
-
-    override string[] fieldNames() {
-        int numFields = mysql_num_fields(result);
-        auto fields = mysql_fetch_fields(result);
-
-        string[] names;
-        for(int i = 0; i < numFields; i++) {
-            names ~= fromCstring(fields[i].name, fields[i].name_length);
-        }
-
-        return names;
     }
 }

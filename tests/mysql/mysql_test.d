@@ -1,9 +1,8 @@
 module mysql.mysql_test;
 
 import std.stdio;
-import mysql.mysql;
-
 import dunit.toolkit;
+import mysql.mysql;
 
 // CHECK MYSQL CLIENT VERSION
 unittest {
@@ -42,4 +41,10 @@ unittest {
 unittest {
     auto mysql = new Mysql("localhost", "root", "root", "mysql_d_testing");
     assertEqual(mysql.escape("string \"with\" quotes"), "string \\\"with\\\" quotes");
+}
+
+// MYSQL STAT
+unittest {
+    auto mysql = new Mysql("localhost", "root", "root", "mysql_d_testing");
+    mysql.stat.assertStartsWith("Uptime: ");
 }
