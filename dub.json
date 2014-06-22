@@ -2,9 +2,16 @@
     "name": "mysql-d",
     "description": "Mysql client C library binding.",
     "copyright": "Copyright © 2014, Pavel",
-    "authors": ["Pavel Evstigneev"],
+    "authors": ["Pavel Evstigneev", "Adam D. Ruppe"],
     "targetType": "library",
     "license": "MIT",
+    "systemDependencies": "mysqlclient",
+    "sourcePaths": ["./source", "./tests"],
+    "importPaths": ["./source", "./tests"],
+    "dependencies": {
+      "dunit": "~master"
+    },
+
     "libs": ["mysqlclient"],
 
     "buildTypes": {
