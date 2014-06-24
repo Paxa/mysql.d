@@ -1,10 +1,6 @@
-# Mysql.d
+#!/usr/bin/env rdmd -I./source/
+module example;
 
-### mysql library binding. Extraction from https://github.com/adamdruppe/arsd
-
-Documentation is not ready yet
-
-```D
 import std.stdio;
 import mysql.d;
 
@@ -25,24 +21,12 @@ void main() {
 
     auto rows = mysql.query("select * from users");
 
+    
     rows.length; // => 2
+    //for (int i = 0; i < rows.length; i++) {
+    //    rows.front
+    //    auto user = rows.front;
     foreach (user; rows) {
         writefln("User %s, %s, born on %s", user["name"], user["sex"] == "1" ? "male" : "female", user["birthdate"]);
     }
 }
-```
-
-Output is:
-```
-User Paul, male, born on 1981-05-06
-User Anna, female, born on 1983-02-13
-```
-
-#### Compiling
-
-* Install dub with `brew install dub` or from here http://code.dlang.org/download
-* Run `dub`
-
-#### Testing
-
-* run `dub test`
