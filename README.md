@@ -46,3 +46,7 @@ User Anna, female, born on 1983-02-13
 #### Testing
 
 * run `dub test`
+
+#### Example application
+
+[http://mysql-d.mooo.com/](http://mysql-d.mooo.com/)
