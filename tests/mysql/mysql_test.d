@@ -48,3 +48,29 @@ unittest {
     auto mysql = new Mysql("localhost", "root", "root", "mysql_d_testing");
     mysql.stat.assertStartsWith("Uptime: ");
 }
+
+/*
+TODO: Fix it
+// MYSQL CLOSE
+unittest {
+    auto mysql = new Mysql("localhost", "root", "root", "mysql_d_testing");
+    mysql.close();
+}
+*/
+
+// MYSQL OPTIONS
+unittest {
+    auto mysql = new Mysql();
+    // if we comment this line then server will fall with errro
+    // MySQL server has gone away :::: SHOW VARIABLES WHERE `variable_name` = 'pseudo_thread_id';
+    mysql.setReconnect(true);
+    mysql.connect("localhost", "root", "root", "mysql_d_testing");
+
+    auto res = mysql.query("SHOW VARIABLES WHERE `variable_name` = 'pseudo_thread_id';");
+
+    auto mysq2 = new Mysql("localhost", "root", "root", "mysql_d_testing");
+    mysq2.query("kill ?", res.front["Value"]);
+
+    auto res2 = mysql.query("SHOW VARIABLES WHERE `variable_name` = 'pseudo_thread_id';");
+    assertEqual(res.front["Value"], res.front["Value"]);
+}

@@ -1,2 +1,3 @@
 .dub/
 __test__library__
+libmysql-d.a

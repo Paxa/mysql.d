@@ -22,10 +22,21 @@ class Mysql {
     this(string host, string user, string pass, string db) {
         mysql = enforceEx!(MysqlDatabaseException)(
             mysql_init(null),
-            "Couldn't init mysql");
+            "Couldn't init mysql"
+        );
+        setReconnect(true);
+        connect(host, user, pass, db);
+    }
+
+    this() {
+        mysql = enforceEx!(MysqlDatabaseException)(mysql_init(null), "Couldn't init mysql");
+    }
+
+    void connect(string host, string user, string pass, string db) {
         enforceEx!(MysqlDatabaseException)(
             mysql_real_connect(mysql, toCstring(host), toCstring(user), toCstring(pass), toCstring(db), 0, null, 0),
-            error());
+            error()
+        );
 
         dbname = db;
 
@@ -37,6 +48,18 @@ class Mysql {
         auto res = mysql_select_db(mysql, toCstring(newDbName));
         dbname = newDbName;
         return res;
+    }
+
+    int setOption(mysql_option option, const void* value) {
+        return mysql_options(mysql, option, &value);
+    }
+
+    int setReconnect(bool value) {
+        return setOption(mysql_option.MYSQL_OPT_RECONNECT, &value);
+    }
+
+    int setConnectTimeout(int value) {
+        return setOption(mysql_option.MYSQL_OPT_CONNECT_TIMEOUT, cast(const(char*))value);
     }
 
     static ulong clientVersion() {
