@@ -17,7 +17,7 @@ void test_mysql_config_env () {
         test_mysql_user = environment["MYSQL_USER"];
     }
 
-    if (environment.get("MYSQL_PASSWORD")) {
+    if (environment.get("MYSQL_PASSWORD", "^^^") != "^^^") {
         test_mysql_password = environment["MYSQL_PASSWORD"];
     }
 
