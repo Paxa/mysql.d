@@ -4,6 +4,7 @@ import std.stdio;
 import dunit.toolkit;
 
 import mysql.mysql;
+import mysql.test_config;
 import mysql.test_helper;
 
 // CHECK MYSQL CLIENT VERSION
@@ -33,7 +34,7 @@ unittest {
     assertEqual(mysql.queryOneRow("SELECT DATABASE() as dbname;")["dbname"], "mysql");
 
     // change database
-    mysql.selectDb("mysql_d_testing");
+    mysql.selectDb(test_mysql_db);
 
     // check, it should be changed
     assertEqual(mysql.queryOneRow("SELECT DATABASE() as dbname;")["dbname"], test_mysql_db);

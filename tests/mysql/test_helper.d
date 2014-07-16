@@ -1,11 +1,7 @@
 module mysql.test_helper;
 
+import mysql.test_config;
 import mysql.mysql;
-
-string test_mysql_host = "localhost";
-string test_mysql_user = "root";
-string test_mysql_password = "root";
-string test_mysql_db = "mysql_d_testing";
 
 Mysql testing_db_init() {
     auto mysql = new Mysql(test_mysql_host, test_mysql_user, test_mysql_password, "mysql");

@@ -5,6 +5,7 @@ import dunit.toolkit;
 
 import mysql.mysql;
 import mysql.test_helper;
+import mysql.test_config;
 
 // MAKE AN SQL QUERY
 unittest {
@@ -21,7 +22,7 @@ unittest {
     // list table
     auto q_res3 = mysql.query("show tables;");
     assertEqual(q_res3.length, 1);
-    assertEqual(q_res3.front()["Tables_in_mysql_d_testing"], "mysql_d_table");
+    assertEqual(q_res3.front()["Tables_in_" ~ test_mysql_db], "mysql_d_table");
 
     // insert some
     mysql.query("INSERT INTO mysql_d_table (name, date) values (?, ?);", "Paul", "1989-05-06");
