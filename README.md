@@ -2,6 +2,8 @@
 
 ### mysql library binding. Extraction from https://github.com/adamdruppe/arsd
 
+[![Build Status](https://drone.io/github.com/Paxa/mysql.d/status.png)](https://drone.io/github.com/Paxa/mysql.d/latest)
+
 Documentation is not ready yet
 
 ```D
