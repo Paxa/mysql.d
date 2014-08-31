@@ -52,14 +52,11 @@ unittest {
     mysql.stat.assertStartsWith("Uptime: ");
 }
 
-/*
-TODO: Fix it
 // MYSQL CLOSE
 unittest {
     auto mysql = new Mysql(test_mysql_host, test_mysql_user, test_mysql_password, "mysql_d_testing");
     mysql.close();
 }
-*/
 
 // MYSQL OPTIONS
 unittest {

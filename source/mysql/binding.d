@@ -53,7 +53,7 @@ extern(System) {
     struct MYSQL;
 
     struct MYSQL_RES {
-        ulong  row_count;
+        ulong           row_count;
         MYSQL_FIELD     *fields;
         MYSQL_DATA      *data;
         MYSQL_ROWS      *data_cursor;
