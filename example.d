@@ -5,7 +5,7 @@ import std.stdio;
 import mysql.d;
 
 void main() {
-    auto mysql = new Mysql("localhost", "root", "root", "mysql_d_testing");
+    auto mysql = new Mysql("localhost", 3306, "root", "root", "mysql_d_testing");
 
     mysql.query("DROP TABLE IF EXISTS users");
     mysql.query("CREATE TABLE users (

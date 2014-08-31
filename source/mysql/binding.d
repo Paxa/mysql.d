@@ -123,7 +123,15 @@ extern(System) {
     uint mysql_errno(MYSQL*);
     cstring mysql_error(MYSQL*);
 
-    MYSQL* mysql_real_connect(MYSQL*, cstring, cstring, cstring, cstring, uint, cstring, c_ulong);
+    MYSQL* mysql_real_connect(MYSQL*,
+        cstring host,
+        cstring user,
+        cstring password,
+        cstring db,
+        uint port,
+        cstring unix_socket,
+        c_ulong clientflag
+    );
     int mysql_select_db(MYSQL*, cstring);
 
     int mysql_query(MYSQL*, cstring);

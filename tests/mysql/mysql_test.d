@@ -64,7 +64,7 @@ unittest {
     // if we comment this line then server will fall with errro
     // MySQL server has gone away :::: SHOW VARIABLES WHERE `variable_name` = 'pseudo_thread_id';
     mysql.setReconnect(true);
-    mysql.connect(test_mysql_host, test_mysql_user, test_mysql_password, test_mysql_db);
+    mysql.connect(test_mysql_host, 0, test_mysql_user, test_mysql_password, test_mysql_db);
 
     auto res = mysql.query("SHOW VARIABLES WHERE `variable_name` = 'pseudo_thread_id';");
 

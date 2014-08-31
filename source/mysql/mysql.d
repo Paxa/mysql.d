@@ -20,21 +20,39 @@ class Mysql {
     private MYSQL* mysql;
 
     this(string host, string user, string pass, string db) {
-        mysql = enforceEx!(MysqlDatabaseException)(
-            mysql_init(null),
-            "Couldn't init mysql"
-        );
-        setReconnect(true);
-        connect(host, user, pass, db);
+        initMysql();
+        connect(host, 0, user, pass, db, null);
+    }
+
+    this(string host, uint port, string user, string pass, string db) {
+        initMysql();
+        connect(host, port, user, pass, db, null);
+    }
+
+    this(string host, string user, string pass) {
+        initMysql();
+        connect(host, user, pass);
     }
 
     this() {
-        mysql = enforceEx!(MysqlDatabaseException)(mysql_init(null), "Couldn't init mysql");
+        initMysql();
     }
 
-    void connect(string host, string user, string pass, string db) {
+    private void initMysql () {
+        mysql = enforceEx!(MysqlDatabaseException)(mysql_init(null), "Couldn't init mysql");
+        setReconnect(true);
+    }
+
+    void connect(string host, uint port, string user, string pass, string db, string unixSocket) {
         enforceEx!(MysqlDatabaseException)(
-            mysql_real_connect(mysql, toCstring(host), toCstring(user), toCstring(pass), toCstring(db), 0, null, 0),
+            mysql_real_connect(mysql,
+                toCstring(host),
+                toCstring(user),
+                toCstring(pass),
+                toCstring(db),
+                port,
+                unixSocket ? toCstring(unixSocket) : null,
+                0),
             error()
         );
 
@@ -42,6 +60,18 @@ class Mysql {
 
         // we want UTF8 for everything
         query("SET NAMES 'utf8'");
+    }
+
+    void connect(string host, uint port, string user, string pass, string db) {
+        connect(host, port, user, pass, db, null);
+    }
+
+    void connect(string host, string user, string pass, string db) {
+        connect(host, 0, user, pass, db, null);
+    }
+
+    void connect(string host, string user, string pass) {
+        connect(host, 0, user, pass, null, null);
     }
 
     int selectDb(string newDbName) {
