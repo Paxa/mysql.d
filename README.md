@@ -46,11 +46,11 @@ User Anna, female, born on 1983-02-13
     `?` - convert to string but without quotes
 
 ```d
-mysql.query("CREATE TABLE ? (id INT, data VARCHAR(100) ) ENGINE=innodb", "some_table"); // error
-// SQL error near ''some_table' (id INT, data VARCHAR(100) ) ENGINE=innodb' at line 1 :::: CREATE TABLE 'some_table' (id INT, data VARCHAR(100) ) ENGINE=innodb
+mysql.query("DROP TABLE ?", "table_name"); // error
+// SQL error near near ''table_name'' at line 1 :::: DROP TABLE 'table_name'
 // should be `some_table` not 'some_table'
 
-mysql.query("CREATE TABLE `?` (id INT, data VARCHAR(100) ) ENGINE=innodb", "some_table"); // working
+mysql.query("DROP TABLE `?`", "table_name"); // working
 ```
 
 #### Compiling
