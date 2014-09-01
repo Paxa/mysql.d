@@ -40,6 +40,19 @@ User Paul, male, born on 1981-05-06
 User Anna, female, born on 1983-02-13
 ```
 
+**Escaping**
+
+    ? - convert to string with escaped quotes to prevent sql injection
+    `?` - convert to string but without quotes
+
+```d
+mysql.query("CREATE TABLE ? (id INT, data VARCHAR(100) ) ENGINE=innodb", "some_table"); // error
+// SQL error near ''some_table' (id INT, data VARCHAR(100) ) ENGINE=innodb' at line 1 :::: CREATE TABLE 'some_table' (id INT, data VARCHAR(100) ) ENGINE=innodb
+// should be `some_table` not 'some_table'
+
+mysql.query("CREATE TABLE `?` (id INT, data VARCHAR(100) ) ENGINE=innodb", "some_table"); // working
+```
+
 #### Compiling
 
 * Install dub with `brew install dub` or from here http://code.dlang.org/download

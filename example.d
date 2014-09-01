@@ -1,6 +1,7 @@
 #!/usr/bin/env rdmd -I./source/
 module example;
 
+import std.string;
 import std.stdio;
 import mysql.d;
 
