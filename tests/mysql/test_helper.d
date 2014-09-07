@@ -12,3 +12,16 @@ Mysql testing_db_init() {
     mysql.selectDb(test_mysql_db);
     return mysql;
 }
+
+
+string[] listTables(Mysql mysql) {
+    auto q_res = mysql.query("show tables;");
+
+    string[] tables;
+    string col = q_res.fieldNames[0];
+
+    foreach (table; q_res) {
+        tables ~= table[q_res.fieldNames[0]];
+    }
+    return tables;
+}
