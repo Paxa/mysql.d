@@ -40,6 +40,19 @@ User Paul, male, born on 1981-05-06
 User Anna, female, born on 1983-02-13
 ```
 
+**Escaping**
+
+    ? - convert to string with escaped quotes to prevent sql injection
+    `?` - convert to string but without quotes
+
+```d
+mysql.query("DROP TABLE ?", "table_name"); // error
+// SQL error near near ''table_name'' at line 1 :::: DROP TABLE 'table_name'
+// should be `some_table` not 'some_table'
+
+mysql.query("DROP TABLE `?`", "table_name"); // working
+```
+
 #### Compiling
 
 * Install dub with `brew install dub` or from here http://code.dlang.org/download

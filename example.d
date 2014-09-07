@@ -1,6 +1,7 @@
 #!/usr/bin/env rdmd -I./source/
 module example;
 
+import std.string;
 import std.stdio;
 import mysql.d;
 
@@ -29,4 +30,5 @@ void main() {
     foreach (user; rows) {
         writefln("User %s, %s, born on %s", user["name"], user["sex"] == "1" ? "male" : "female", user["birthdate"]);
     }
+    mysql.query("DROP TABLE `?`", "users");
 }

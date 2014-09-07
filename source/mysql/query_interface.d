@@ -104,13 +104,33 @@ class QueryInterface {
 
     // just for convenience; "str".toSql(db);
     static string toSql(string s, Mysql db) {
-        if(s is null)
-            return "NULL";
+        if(s is null) return "NULL";
         return '\'' ~ db.escape(s) ~ '\'';
     }
 
     static string toSql(long s, Mysql db) {
         return to!string(s);
+    }
+
+    static string toSqlName(string s, Mysql db) {
+        if(s is null) return "NULL";
+        return db.escape(s);
+    }
+
+    static string toSqlName(long s, Mysql db) {
+        return toSql(s, db);
+    }
+
+    static string toSqlName(Variant a, Mysql db) {
+        auto v = a.peek!(void*);
+        if(v && (*v is null))
+            return "NULL";
+        else {
+            string str = to!string(a);
+            return db.escape(str);
+        }
+
+        assert(0);
     }
 
     static string escapedVariants(Mysql db, in string sql, Variant[string] t) {
@@ -122,7 +142,7 @@ class QueryInterface {
         int currentStart = 0;
     // FIXME: let's make ?? render as ? so we have some escaping capability
         foreach(int i, dchar c; sql) {
-            if(c == '?') {
+            if (c == '?') {
                 fixedup ~= sql[currentStart .. i];
 
                 int idxStart = i + 1;
@@ -160,7 +180,7 @@ class QueryInterface {
 
     /// Note: ?n params are zero based!
     static string escapedVariants(Mysql db, in string sql, Variant[] t) {
-    // FIXME: let's make ?? render as ? so we have some escaping capability
+        // FIXME: let's make ?? render as ? so we have some escaping capability
         // if nothing to escape or nothing to escape with, don't bother
         if (t.length > 0 && sql.indexOf("?") != -1) {
             string fixedup;
@@ -185,9 +205,13 @@ class QueryInterface {
                     }
 
                     if(idx < 0 || idx >= t.length)
-                        throw new Exception("SQL Parameter index is out of bounds: " ~ to!string(idx) ~ " at `"~sql[0 .. i]~"`");
+                        throw new Exception("SQL Parameter index is out of bounds: " ~ to!string(idx) ~ " at `" ~ sql[0 .. i] ~ "`");
 
-                    fixedup ~= toSql(t[idx], db);
+                    if (sql[i - 1] == '`' && sql[i + 1] == '`') {
+                        fixedup ~= toSqlName(t[idx], db);
+                    } else {
+                        fixedup ~= toSql(t[idx], db);
+                    }
                 }
             }
 
