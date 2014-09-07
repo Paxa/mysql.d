@@ -16,7 +16,7 @@ class MysqlDatabaseException : Exception {
 }
 
 class Mysql {
-    string dbname;
+    private string _dbname;
     private MYSQL* mysql;
 
     this(string host, string user, string pass, string db) {
@@ -56,7 +56,7 @@ class Mysql {
             error()
         );
 
-        dbname = db;
+        _dbname = db;
 
         // we want UTF8 for everything
         query("SET NAMES 'utf8'");
@@ -76,8 +76,12 @@ class Mysql {
 
     int selectDb(string newDbName) {
         auto res = mysql_select_db(mysql, toCstring(newDbName));
-        dbname = newDbName;
+        _dbname = newDbName;
         return res;
+    }
+
+    string dbname() {
+        return _dbname;
     }
 
     int setOption(mysql_option option, const void* value) {

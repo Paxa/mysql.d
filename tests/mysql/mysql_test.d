@@ -15,6 +15,12 @@ unittest {
     assert(Mysql.clientVersion > 50100);
 }
 
+// Mysql.dbname
+unittest {
+    auto mysql = new Mysql(test_mysql_host, test_mysql_user, test_mysql_password, "mysql");
+    assert(mysql.dbname == mysql.queryOneRow("SELECT DATABASE() as current_db;")["current_db"]);
+}
+
 // MYSQL PING
 unittest {
     auto mysql = new Mysql(test_mysql_host, test_mysql_user, test_mysql_password, "mysql");
