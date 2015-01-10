@@ -5,7 +5,6 @@ import dunit.toolkit;
 
 import mysql.mysql;
 import mysql.test_helper;
-import mysql.test_config;
 
 // MAKE AN SQL QUERY
 unittest {

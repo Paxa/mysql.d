@@ -4,7 +4,6 @@ import std.stdio;
 import dunit.toolkit;
 
 import mysql.mysql;
-import mysql.test_config;
 import mysql.test_helper;
 
 // CHECK MYSQL CLIENT VERSION
@@ -17,19 +16,19 @@ unittest {
 
 // Mysql.dbname
 unittest {
-    auto mysql = new Mysql(test_mysql_host, test_mysql_user, test_mysql_password, "mysql");
+    auto mysql = test_mysql_db_connection();
     assert(mysql.dbname == mysql.queryOneRow("SELECT DATABASE() as current_db;")["current_db"]);
 }
 
 // MYSQL PING
 unittest {
-    auto mysql = new Mysql(test_mysql_host, test_mysql_user, test_mysql_password, "mysql");
+    auto mysql = test_mysql_db_connection;
     assert(mysql.ping == 0);
 }
 
 // MAKE CONNECTION, CHANGE DB
 unittest {
-    auto mysql = new Mysql(test_mysql_host, test_mysql_user, test_mysql_password, "mysql");
+    auto mysql = test_mysql_db_connection();
 
     // drop database if exists
     mysql.query("DROP DATABASE IF EXISTS " ~ test_mysql_db);

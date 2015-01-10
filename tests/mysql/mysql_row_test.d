@@ -5,7 +5,6 @@ import dunit.toolkit;
 
 import mysql.mysql;
 import mysql.test_helper;
-import mysql.test_config;
 
 unittest {
     auto mysql = testing_db_init();

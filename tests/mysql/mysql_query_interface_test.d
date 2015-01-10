@@ -5,7 +5,6 @@ import dunit.toolkit;
 
 import mysql.mysql;
 import mysql.query_interface;
-import mysql.test_config;
 import mysql.test_helper;
 
 
