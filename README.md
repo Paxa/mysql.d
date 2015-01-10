@@ -60,7 +60,7 @@ mysql.query("DROP TABLE `?`", "table_name"); // working
 
 #### Testing
 
-* run `dub test`
+* run `dub test --config=test`
 
 #### Example application
 

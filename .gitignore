@@ -1,3 +1,6 @@
 .dub/
 __test__library__
+__test__test__
 libmysql-d.a
+dub.selections.json
+
