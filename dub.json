@@ -8,7 +8,8 @@
   "license": "MIT",
   "systemDependencies": "mysqlclient",
 
-  "libs": ["mysqlclient"],
+  "libs-posix": ["mysqlclient"],
+  "libs-windows": ["libmysql"],
 
   "configurations": [
     {

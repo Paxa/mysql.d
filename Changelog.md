@@ -1,3 +1,11 @@
+### 0.3.2 (release date: 2015-09-03)
+
+* Support for windows
+
+### 0.3.1 (release date: 2015-01-10)
+
+* Update travis ci config
+
 ### 0.3.0 (release date: 2014-09-01)
 
 * Fix Mysql#close
