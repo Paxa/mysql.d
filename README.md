@@ -64,4 +64,4 @@ mysql.query("DROP TABLE `?`", "table_name"); // working
 
 #### Example application
 
-[http://mysql-d.mooo.com/](http://mysql-d.mooo.com/)
+[http://mysql-d.tk/](http://mysql-d.tk/)
