@@ -96,8 +96,8 @@ extern(System) {
         cstring db;                   /* Database for table */
         cstring catalog;          /* Catalog for table */
         cstring def;                  /* Default value (set by mysql_list_fields) */
-        ulong length;       /* Width of column (create length) */
-        ulong max_length;   /* Max width for selected set */
+        size_t length;       /* Width of column (create length) */
+        size_t max_length;   /* Max width for selected set */
         uint name_length;
         uint org_name_length;
         uint table_length;

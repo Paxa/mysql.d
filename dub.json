@@ -22,7 +22,7 @@
       "sourcePaths": [ "tests/", "source/" ],
       "importPaths": [ "tests/", "source/" ],
       "dependencies": {
-        "dunit": "1.0.10"
+        "dunit": "1.0.12"
       }
     }
   ],
