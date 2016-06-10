@@ -26,13 +26,15 @@ class MysqlResult {
         this.sql = sql;
 
         // prime it
-        if(itemsTotal)
+        if (itemsTotal) {
             fetchNext();
+        }
     }
 
     ~this() {
-        if(result !is null)
+        if (result !is null) {
             mysql_free_result(result);
+        }
     }
 
 
@@ -49,8 +51,9 @@ class MysqlResult {
 
 
     int length() {
-        if(result is null)
+        if (result is null) {
             return 0;
+        }
         return cast(int) mysql_num_rows(result);
     }
 
@@ -64,17 +67,18 @@ class MysqlResult {
 
     void popFront() {
         itemsUsed++;
-        if(itemsUsed < itemsTotal) {
+        if (itemsUsed < itemsTotal) {
             fetchNext();
         }
     }
 
     int getFieldIndex(string field) {
-        if(mapping is null)
+        if (mapping is null) {
             makeFieldMapping();
-        debug {
-            if(field !in mapping)
+        } debug {
+            if (field !in mapping) {
                 throw new Exception(field ~ " not in result");
+            }
         }
         return mapping[field];
     }
@@ -95,20 +99,23 @@ class MysqlResult {
         int numFields = mysql_num_fields(result);
         auto fields = mysql_fetch_fields(result);
 
-        if(fields is null)
+        if (fields is null) {
             return;
+        }
 
         for(int i = 0; i < numFields; i++) {
-            if(fields[i].name !is null)
+            if (fields[i].name !is null) {
                 mapping[fromCstring(fields[i].name, fields[i].name_length)] = i;
+            }
         }
     }
 
     private void fetchNext() {
         assert(result);
         auto my_row = mysql_fetch_row(result);
-        if(my_row is null)
+        if (my_row is null) {
             throw new Exception("there is no next row");
+        }
         uint numFields = mysql_num_fields(result);
         uint* lengths = mysql_fetch_lengths(result);
         string[] row;

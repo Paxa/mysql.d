@@ -8,6 +8,7 @@ import mysql.query_interface;
 
 import std.stdio;
 import std.exception;
+import std.typecons;
 
 class MysqlDatabaseException : Exception {
     this(string msg, string file = __FILE__, size_t line = __LINE__) {
@@ -172,14 +173,14 @@ class Mysql {
 
     // simply make mysq.query().front
     // and if no rows then raise an exception
-    MysqlRow queryOneRow(string file = __FILE__, size_t line = __LINE__, T...)(string sql, T t) {
+    Nullable!MysqlRow queryOneRow(string file = __FILE__, size_t line = __LINE__, T...)(string sql, T t) {
         auto res = query(sql, t);
         if (res.empty) {
-            throw new Exception("no row in result", file, line);
+            return Nullable!MysqlRow.init;
         }
         auto row = res.front;
 
-        return row;
+        return Nullable!MysqlRow(row);
     }
 
 /*

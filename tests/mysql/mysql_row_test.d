@@ -25,3 +25,20 @@ unittest {
     assert(row["name"] == "Paul");
     assert(row["date"] == "1989-05-06");
 }
+
+// Should return nullable value
+unittest {
+    auto mysql = testing_db_init();
+
+    // create table
+    mysql.query("CREATE TABLE mysql_d_table (
+        id INT NOT NULL AUTO_INCREMENT,
+        name VARCHAR(100),
+        date DATE,
+        PRIMARY KEY (id)
+    );");
+
+    auto row = mysql.queryOneRow("select * from mysql_d_table;");
+
+    assert(row.isNull);
+}
