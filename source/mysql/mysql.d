@@ -19,6 +19,7 @@ class MysqlDatabaseException : Exception {
 class Mysql {
     private string _dbname;
     private MYSQL* mysql;
+	private string errorMsg;
 
     this(string host, string user, string pass, string db) {
         initMysql();
@@ -151,6 +152,19 @@ class Mysql {
         return new MysqlResult(mysql_store_result(mysql), sql);
     }
 
+ 	// To be used with commands that do not return a result (INSERT, UPDATE, etc...)
+	bool execImpl(string sql) {
+		bool success = false;
+ 
+		if (mysql_query(mysql, toCstring(sql)) == 0) {
+			success = true; 
+			this.errorMsg = "";
+		} else 
+			this.errorMsg = error() ~ " :::: " ~ sql;
+         
+		return success;
+	}
+
     // MYSQL API call
     int ping() {
         return mysql_ping(mysql);
@@ -170,6 +184,14 @@ class Mysql {
     MysqlResult query(T...)(string sql, T t) {
         return queryImpl(QueryInterface.makeQuery(this, sql, t));
     }
+
+	bool exec(T...)(string sql, T t) {
+         return execImpl(QueryInterface.makeQuery(this, sql, t));
+    }
+
+	string dbErrorMsg() {
+		return this.errorMsg;
+	}
 
     // simply make mysq.query().front
     // and if no rows then raise an exception
