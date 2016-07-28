@@ -1,3 +1,8 @@
+### 0.3.3 (release date: 2016-07-28)
+
+* Don't throw exception by queryOneRow
+* Add exec(T...)(string sql, T t) method
+
 ### 0.3.2 (release date: 2015-09-03)
 
 * Support for windows
