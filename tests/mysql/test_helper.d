@@ -6,7 +6,7 @@ import mysql.mysql;
 
 string test_mysql_host = "localhost";
 string test_mysql_user = "root";
-string test_mysql_password = "root1";
+string test_mysql_password = "";
 string test_mysql_db = "mysql_d_testing";
 
 bool test_mysql_info_printed = false;
