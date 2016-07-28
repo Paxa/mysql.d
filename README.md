@@ -31,6 +31,11 @@ void main() {
     foreach (user; rows) {
         writefln("User %s, %s, born on %s", user["name"], user["sex"] == "1" ? "male" : "female", user["birthdate"]);
     }
+
+    bool result = mysql.exec("select name, gender from users");
+    if (!result) {
+      writefln("SQL Error: %s", mysql.dbErrorMsg);
+    }
 }
 ```
 
