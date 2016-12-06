@@ -26,9 +26,9 @@ class Mysql {
         connect(host, 0, user, pass, db, null);
     }
 
-    this(string host, uint port, string user, string pass, string db) {
+    this(string host, uint port, string user, string pass, string db, string charset="utf8") {
         initMysql();
-        connect(host, port, user, pass, db, null);
+        connect(host, port, user, pass, db, null, charset);
     }
 
     this(string host, string user, string pass) {
@@ -45,7 +45,7 @@ class Mysql {
         setReconnect(true);
     }
 
-    void connect(string host, uint port, string user, string pass, string db, string unixSocket) {
+    void connect(string host, uint port, string user, string pass, string db, string unixSocket, string charset="utf8") {
         enforceEx!(MysqlDatabaseException)(
             mysql_real_connect(mysql,
                 toCstring(host),
@@ -61,11 +61,11 @@ class Mysql {
         _dbname = db;
 
         // we want UTF8 for everything
-        query("SET NAMES 'utf8'");
+        query("SET NAMES '"~ charset ~"'");
     }
 
-    void connect(string host, uint port, string user, string pass, string db) {
-        connect(host, port, user, pass, db, null);
+    void connect(string host, uint port, string user, string pass, string db, string charset="utf8") {
+        connect(host, port, user, pass, db, null, charset);
     }
 
     void connect(string host, string user, string pass, string db) {
