@@ -79,3 +79,9 @@ unittest {
     auto res2 = mysql.query("SHOW VARIABLES WHERE `variable_name` = 'pseudo_thread_id';");
     assertEqual(res.front["Value"], res.front["Value"]);
 }
+
+// MYSQL CHARSET
+unittest {
+    auto mysql = new Mysql(test_mysql_host, 3306, test_mysql_user, test_mysql_password, test_mysql_db, "eucjpms");
+    mysql.charset.assertEqual("eucjpms");
+}

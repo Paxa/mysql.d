@@ -26,7 +26,7 @@ class Mysql {
         connect(host, 0, user, pass, db, null);
     }
 
-    this(string host, uint port, string user, string pass, string db, string charset="utf8") {
+    this(string host, uint port, string user, string pass, string db, string charset = null) {
         initMysql();
         connect(host, port, user, pass, db, null, charset);
     }
@@ -45,7 +45,7 @@ class Mysql {
         setReconnect(true);
     }
 
-    void connect(string host, uint port, string user, string pass, string db, string unixSocket, string charset="utf8") {
+    void connect(string host, uint port, string user, string pass, string db, string unixSocket, string charset = null) {
         enforceEx!(MysqlDatabaseException)(
             mysql_real_connect(mysql,
                 toCstring(host),
@@ -60,8 +60,7 @@ class Mysql {
 
         _dbname = db;
 
-        // we want UTF8 for everything
-        query("SET NAMES '"~ charset ~"'");
+        if (charset != null) setCharset(charset);
     }
 
     void connect(string host, uint port, string user, string pass, string db, string charset="utf8") {
@@ -96,6 +95,14 @@ class Mysql {
 
     int setConnectTimeout(int value) {
         return setOption(mysql_option.MYSQL_OPT_CONNECT_TIMEOUT, cast(const(char*))value);
+    }
+
+    int setCharset(string charset) {
+        return mysql_set_character_set(mysql, toCstring(charset));
+    }
+
+    string charset() {
+        return fromCstring(mysql_character_set_name(mysql));
     }
 
     static ulong clientVersion() {
