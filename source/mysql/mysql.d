@@ -16,6 +16,8 @@ class MysqlDatabaseException : Exception {
     }
 }
 
+alias Connection = Mysql;
+
 class Mysql {
     private string _dbname;
     private MYSQL* mysql;
@@ -41,12 +43,12 @@ class Mysql {
     }
 
     private void initMysql () {
-        mysql = enforceEx!(MysqlDatabaseException)(mysql_init(null), "Couldn't init mysql");
+        mysql = enforce!(MysqlDatabaseException)(mysql_init(null), "Couldn't init mysql");
         setReconnect(true);
     }
 
     void connect(string host, uint port, string user, string pass, string db, string unixSocket, string charset = null) {
-        enforceEx!(MysqlDatabaseException)(
+        enforce!(MysqlDatabaseException)(
             mysql_real_connect(mysql,
                 toCstring(host),
                 toCstring(user),
@@ -117,6 +119,14 @@ class Mysql {
         query("START TRANSACTION");
     }
 
+    void commit() {
+        query("COMMIT");
+    }
+
+    void rollback() {
+        query("ROLLBACK");
+    }
+
     string error() {
         return fromCstring(mysql_error(mysql));
     }
@@ -152,7 +162,7 @@ class Mysql {
 
     // MYSQL API call
     MysqlResult queryImpl(string sql) {
-        enforceEx!(MysqlDatabaseException)(
+        enforce!(MysqlDatabaseException)(
             !mysql_query(mysql, toCstring(sql)),
         error() ~ " :::: " ~ sql);
 
@@ -230,6 +240,9 @@ class Mysql {
         return ResultByDataObject!R(cast(MysqlResult) magic, this);
     }
 */
+package:
+
+    bool busy = false;
 }
 
 /*

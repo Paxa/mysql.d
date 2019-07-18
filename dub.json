@@ -1,38 +1,37 @@
 {
-  "name": "mysql-d",
-  "description": "Mysql client C library binding.",
-  "copyright": "Copyright © 2014, Pavel",
-  "authors": ["Pavel Evstigneev", "Adam D. Ruppe"],
+    "name": "mysql-d",
+    "description": "Mysql client C library binding.",
+    "copyright": "Copyright © 2014, Pavel",
+    "authors": ["Pavel Evstigneev", "Adam D. Ruppe"],
 
-  "targetType": "library",
-  "license": "MIT",
-  "systemDependencies": "mysqlclient",
+    "targetType": "library",
+    "license": "MIT",
+    "systemDependencies": "mysqlclient",
 
-  "libs-posix": ["mysqlclient"],
-  "libs-windows": ["libmysql"],
+    "libs-posix": ["mysqlclient"],
+    "libs-windows": ["libmysql"],
 
-  "configurations": [
-    {
-      "name": "mysql-d",
-      "sourcePaths": ["source/"],
-      "importPaths": ["source/"],
-    },
-    {
-      "name": "test",
-      "sourcePaths": [ "tests/", "source/" ],
-      "importPaths": [ "tests/", "source/" ],
-      "dependencies": {
-        "dunit": "1.0.12"
-      }
+    "configurations": [{
+            "name": "mysql-d",
+            "sourcePaths": ["source/"],
+            "importPaths": ["source/"]
+        },
+        {
+            "name": "test",
+            "sourcePaths": ["tests/", "source/"],
+            "importPaths": ["tests/", "source/"],
+            "dependencies": {
+                "dunit": "1.0.15"
+            }
+        }
+    ],
+
+    "buildTypes": {
+        "release": {
+            "buildOptions": ["optimize"]
+        },
+        "unittest": {
+            "buildOptions": ["unittests", "debugMode", "debugInfo"]
+        }
     }
-  ],
-
-  "buildTypes": {
-    "release": {
-      "buildOptions": ["optimize"]
-    },
-    "unittest": {
-      "buildOptions": ["unittests", "debugMode", "debugInfo"]
-    }
-  }
 }
